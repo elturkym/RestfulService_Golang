@@ -29,7 +29,7 @@ func serveRest(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	http.HandleFunc("/", serveRest)
-	http.ListenAndServe("localhost:1212", nil)
+	http.ListenAndServe("0.0.0.0:8080", nil)
 }
 
 func getJsonResponse() ([]byte, error) {
