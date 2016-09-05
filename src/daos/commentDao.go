@@ -1,6 +1,6 @@
 package daos;
 
-import ("../domains")
+import ("domains")
 
 
 

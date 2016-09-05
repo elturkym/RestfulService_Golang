@@ -4,8 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	// "./domains"
-	"../daos"
+	"daos"
 )
 
 
