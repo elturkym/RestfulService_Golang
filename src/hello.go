@@ -12,7 +12,7 @@ func main() {
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/hello/{name}", index)
-	log.Fatal(http.ListenAndServe("0.0.0.0:8080", router))
+	log.Fatal(http.ListenAndServe(":8080", router))
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
