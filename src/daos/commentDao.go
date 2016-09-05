@@ -11,7 +11,7 @@ func GetCommentsById(id int) domains.Comment {
 	return comments[id - 1]
 }
 
-func getCommentsByPostId (postId int) [] domains.Comment {
+func GetCommentsByPostId (postId int) [] domains.Comment {
 	var postComments [] domains.Comment
 	for i := range comments {
 		if (comments[i].PostId == postId) {
