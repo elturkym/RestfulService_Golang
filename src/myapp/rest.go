@@ -4,19 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	// "./domains"
+	"./daos"
 )
 
-type Payload struct {
-	Stuff Data
-}
 
-type Data struct {
-	Fruit   Fruits
-	Veggies Vegetables
-}
-
-type Fruits map[string]int
-type Vegetables map[string]int
 
 func serveRest(w http.ResponseWriter, r *http.Request) {
 	response, err := getJsonResponse()
@@ -33,16 +25,6 @@ func main() {
 }
 
 func getJsonResponse() ([]byte, error) {
-	fruits := make(map[string]int)
-	fruits["Apples"] = 25
-	fruits["Oranges"] = 11
 
-	vegetables := make(map[string]int)
-	vegetables["Carrots"] = 21
-	vegetables["Peppers"] = 0
-
-	d := Data{fruits, vegetables}
-	p := Payload{d}
-
-	return json.MarshalIndent(p, "", "  ")
+	return json.MarshalIndent(daos.GetPostById(1), "", "  ")
 }
