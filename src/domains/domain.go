@@ -1,17 +1,5 @@
 package domains;
 
-type Payload struct {
-	Stuff Data
-}
-
-type Data struct {
-	Fruit   Fruits
-	Veggies Vegetables
-}
-
-type Fruits map[string]int
-type Vegetables map[string]int
-
 type User struct {
 	Id int
 	Name string
@@ -30,4 +18,11 @@ type Comment struct {
 	Text string
 	PostId int
 	User User
+}
+
+type Object interface{}
+
+type Hateoas struct {
+	Object
+	Links map[string]string
 }
