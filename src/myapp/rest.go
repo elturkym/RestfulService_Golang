@@ -22,7 +22,7 @@ func main() {
 	router.HandleFunc("/posts", getPosts).Methods("GET")
 	router.HandleFunc("/posts/{postId}", getPostById).Methods("GET")
 
-	http.ListenAndServe("0.0.0.0:8080", router)
+	http.ListenAndServe(":8080", router)
 }
 
 func createHateoasObject(subject interface{}, host string) domains.Hateoas {
@@ -36,6 +36,15 @@ func createHateoasObject(subject interface{}, host string) domains.Hateoas {
 	return h
 }
 
+func writeJsonResponse(subject interface{}, w http.ResponseWriter) {
+		response, err := json.MarshalIndent(subject, "", "  ")
+		if err != nil {
+			panic(err)
+		}
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		fmt.Fprintf(w, string(response))
+}
+
 //Users
 func getUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -44,11 +53,7 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 	userIdInt , err := strconv.Atoi(userId)
     if err == nil {
 		 h := createHateoasObject(daos.GetUserById(userIdInt), r.Host)
-		 response, err := json.MarshalIndent(h, "", "  ")
-		if err != nil {
-			panic(err)
-		}
-		fmt.Fprintf(w, string(response))
+		 writeJsonResponse(h, w)
     }
 }
 
@@ -65,11 +70,7 @@ func getCommetsByPost(w http.ResponseWriter, r *http.Request) {
 		for i := range comments {
 			hateoas = append(hateoas, createHateoasObject(comments[i], r.Host));
 		}
-		response, err := json.MarshalIndent(hateoas, "", "  ")
-		if err != nil {
-			panic(err)
-		}
-		fmt.Fprintf(w, string(response))
+		writeJsonResponse(hateoas, w)
     }
 }
 
@@ -82,11 +83,7 @@ func getPostsByUserId(w http.ResponseWriter, r *http.Request) {
 	userIdInt , err := strconv.Atoi(userId)
     if err == nil {
     	posts := daos.GetPostsByUserId(userIdInt)
-		response, err := json.MarshalIndent(buildPostsHateoas(posts, r.Host), "", "  ")
-		if err != nil {
-			panic(err)
-		}
-		fmt.Fprintf(w, string(response))
+		writeJsonResponse(buildPostsHateoas(posts, r.Host), w)
     }
 }
 
@@ -94,11 +91,7 @@ func getPostsByUserId(w http.ResponseWriter, r *http.Request) {
 
 func getPosts(w http.ResponseWriter, r *http.Request) {
 	posts := daos.GetPosts()
-	response, err := json.MarshalIndent(buildPostsHateoas(posts[:], r.Host), "", "  ")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Fprintf(w, string(response))
+	writeJsonResponse(buildPostsHateoas(posts[:], r.Host), w)
 }
 
 
@@ -117,11 +110,7 @@ func getPostById(w http.ResponseWriter, r *http.Request) {
 	postIdInt , err := strconv.Atoi(postId)
     if err == nil {
     	post := daos.GetPostById(postIdInt);
-		response, err := json.MarshalIndent(createHateoasObject(post, r.Host), "", "  ")
-		if err != nil {
-			panic(err)
-		}
-		fmt.Fprintf(w, string(response))
+		writeJsonResponse(createHateoasObject(post, r.Host), w)
     }
 }
 
