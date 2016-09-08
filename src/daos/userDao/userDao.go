@@ -5,6 +5,7 @@ import ("domains")
 var users  = make(map[int]domains.User)
 
 func init() {
+	// create dummy data of users
 	user1  := domains.User{Id: 1, Name: "John Swift", Address: "1000 N 4th St", Email: "john@xyz.com"}
 	user2  := domains.User{Id: 2, Name: "Mike Dale", Address: "1000 S 4th St", Email: "mike@xyz.com"}
 	user3  := domains.User{Id: 3, Name: "Ali Tim", Address: "1000 W 4th St", Email: "ali@xyz.com"}
@@ -17,6 +18,12 @@ func init() {
 	users[5]  = user5;
 }
 
-func GetUserById(id int) domains.User {
+type IUserDao interface {
+	GetUserById(id int) domains.User
+}
+
+type MyDao struct {}
+
+func (d MyDao) GetUserById(id int) domains.User {
 	return users[id]
 }

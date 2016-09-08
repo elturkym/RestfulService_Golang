@@ -14,18 +14,102 @@ import (
 
 
 func main() {
+	myCommentDao := commentDao.MyDao{}
+	myUserDao := userDao.MyDao{}
+	myPostDao := postDao.MyDao{}
+	
 	router := mux.NewRouter().StrictSlash(true)
 
-	router.HandleFunc("/users/{userId}", getUser).Methods("GET")
-
-	router.HandleFunc("/posts/{postId}/comments", getCommetsByPost).Methods("GET")
-
-	router.HandleFunc("/users/{userId}/posts", getPostsByUserId).Methods("GET")
-	router.HandleFunc("/posts", getPosts).Methods("GET")
-	router.HandleFunc("/posts/{postId}", getPostById).Methods("GET")
+	router.HandleFunc("/users/{userId}", getUser(myUserDao)).Methods("GET")
+	router.HandleFunc("/posts/{postId}/comments", getCommetsByPost(myCommentDao)).Methods("GET")
+	router.HandleFunc("/users/{userId}/posts", getPostsByUserId(myPostDao)).Methods("GET")
+	router.HandleFunc("/posts", getPosts(myPostDao)).Methods("GET")
+	router.HandleFunc("/posts/{postId}", getPostById(myPostDao)).Methods("GET")
 
 	http.ListenAndServe("0.0.0.0:8080", router)
 }
+
+//Users
+func getUser(iuserDao userDao.IUserDao) func(http.ResponseWriter, *http.Request) {
+
+	return func (w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		userId := vars["userId"]
+
+		userIdInt , err := strconv.Atoi(userId)
+	    if err == nil {
+			 h := createHateoasObject(iuserDao.GetUserById(userIdInt), r.Host)
+			 writeJsonResponse(h, w)
+	    }
+	}
+}
+
+
+// Comments
+func getCommetsByPost(icommentDao commentDao.ICommentDao) func(http.ResponseWriter, *http.Request) {
+	return  func (w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		postId := vars["postId"]
+
+		postIdInt , err := strconv.Atoi(postId)
+	    if err == nil {
+			comments := icommentDao.GetCommentsByPostId(postIdInt)
+			var hateoas [] domains.Hateoas
+			for i := range comments {
+				hateoas = append(hateoas, createHateoasObject(comments[i], r.Host));
+			}
+			writeJsonResponse(hateoas, w)
+	    }
+	}
+}
+
+// Posts
+
+func getPostsByUserId(ipostDao postDao.IPostDao) func(http.ResponseWriter, *http.Request) { 
+	return func (w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		userId := vars["userId"]
+		userIdInt , err := strconv.Atoi(userId)
+	    if err == nil {
+	    	posts := ipostDao.GetPostsByUserId(userIdInt)
+			writeJsonResponse(buildPostsHateoas(posts, r.Host), w)
+	    }
+	}
+}
+
+
+
+func getPosts(ipostDao postDao.IPostDao) func(http.ResponseWriter, *http.Request) { 
+	return func (w http.ResponseWriter, r *http.Request) {
+		posts := ipostDao.GetPosts()
+		writeJsonResponse(buildPostsHateoas(posts[:], r.Host), w)
+	}
+}
+
+
+func buildPostsHateoas (posts []domains.Post, host string) [] domains.Hateoas {
+	var hateoas [] domains.Hateoas
+	for i := range posts {
+		hateoas = append(hateoas, createHateoasObject(posts[i], host));
+	}
+	return hateoas;
+}
+
+func getPostById(ipostDao postDao.IPostDao) func(http.ResponseWriter, *http.Request) { 
+	return func (w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		postId := vars["postId"]
+		postIdInt , err := strconv.Atoi(postId)
+	    if err == nil {
+	    	post := ipostDao.GetPostById(postIdInt);
+			writeJsonResponse(createHateoasObject(post, r.Host), w)
+	    }
+	}
+}
+
+// Hateoas Handling
 
 func createHateoasObject(subject interface{}, host string) domains.Hateoas {
 	h := domains.Hateoas{subject, make(map[string]string)}
@@ -46,75 +130,4 @@ func writeJsonResponse(subject interface{}, w http.ResponseWriter) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		fmt.Fprintf(w, string(response))
 }
-
-//Users
-func getUser(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	userId := vars["userId"]
-
-	userIdInt , err := strconv.Atoi(userId)
-    if err == nil {
-		 h := createHateoasObject(userDao.GetUserById(userIdInt), r.Host)
-		 writeJsonResponse(h, w)
-    }
-}
-
-
-// Comments
-func getCommetsByPost(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	postId := vars["postId"]
-
-	postIdInt , err := strconv.Atoi(postId)
-    if err == nil {
-		comments := commentDao.GetCommentsByPostId(postIdInt)
-		var hateoas [] domains.Hateoas
-		for i := range comments {
-			hateoas = append(hateoas, createHateoasObject(comments[i], r.Host));
-		}
-		writeJsonResponse(hateoas, w)
-    }
-}
-
-// Posts
-
-func getPostsByUserId(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-
-	userId := vars["userId"]
-	userIdInt , err := strconv.Atoi(userId)
-    if err == nil {
-    	posts := postDao.GetPostsByUserId(userIdInt)
-		writeJsonResponse(buildPostsHateoas(posts, r.Host), w)
-    }
-}
-
-
-
-func getPosts(w http.ResponseWriter, r *http.Request) {
-	posts := postDao.GetPosts()
-	writeJsonResponse(buildPostsHateoas(posts[:], r.Host), w)
-}
-
-
-func buildPostsHateoas (posts []domains.Post, host string) [] domains.Hateoas {
-	var hateoas [] domains.Hateoas
-	for i := range posts {
-		hateoas = append(hateoas, createHateoasObject(posts[i], host));
-	}
-	return hateoas;
-}
-
-func getPostById(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-
-	postId := vars["postId"]
-	postIdInt , err := strconv.Atoi(postId)
-    if err == nil {
-    	post := postDao.GetPostById(postIdInt);
-		writeJsonResponse(createHateoasObject(post, r.Host), w)
-    }
-}
-
-
 //End
