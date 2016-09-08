@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"daos"
+	"daos/commentDao"
+	"daos/postDao"
+	"daos/userDao"
 	"domains"
 	"github.com/gorilla/mux"
 	"strconv"
@@ -22,7 +24,7 @@ func main() {
 	router.HandleFunc("/posts", getPosts).Methods("GET")
 	router.HandleFunc("/posts/{postId}", getPostById).Methods("GET")
 
-	http.ListenAndServe(":8080", router)
+	http.ListenAndServe("0.0.0.0:8080", router)
 }
 
 func createHateoasObject(subject interface{}, host string) domains.Hateoas {
@@ -52,7 +54,7 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 
 	userIdInt , err := strconv.Atoi(userId)
     if err == nil {
-		 h := createHateoasObject(daos.GetUserById(userIdInt), r.Host)
+		 h := createHateoasObject(userDao.GetUserById(userIdInt), r.Host)
 		 writeJsonResponse(h, w)
     }
 }
@@ -65,7 +67,7 @@ func getCommetsByPost(w http.ResponseWriter, r *http.Request) {
 
 	postIdInt , err := strconv.Atoi(postId)
     if err == nil {
-		comments := daos.GetCommentsByPostId(postIdInt)
+		comments := commentDao.GetCommentsByPostId(postIdInt)
 		var hateoas [] domains.Hateoas
 		for i := range comments {
 			hateoas = append(hateoas, createHateoasObject(comments[i], r.Host));
@@ -82,7 +84,7 @@ func getPostsByUserId(w http.ResponseWriter, r *http.Request) {
 	userId := vars["userId"]
 	userIdInt , err := strconv.Atoi(userId)
     if err == nil {
-    	posts := daos.GetPostsByUserId(userIdInt)
+    	posts := postDao.GetPostsByUserId(userIdInt)
 		writeJsonResponse(buildPostsHateoas(posts, r.Host), w)
     }
 }
@@ -90,7 +92,7 @@ func getPostsByUserId(w http.ResponseWriter, r *http.Request) {
 
 
 func getPosts(w http.ResponseWriter, r *http.Request) {
-	posts := daos.GetPosts()
+	posts := postDao.GetPosts()
 	writeJsonResponse(buildPostsHateoas(posts[:], r.Host), w)
 }
 
@@ -109,7 +111,7 @@ func getPostById(w http.ResponseWriter, r *http.Request) {
 	postId := vars["postId"]
 	postIdInt , err := strconv.Atoi(postId)
     if err == nil {
-    	post := daos.GetPostById(postIdInt);
+    	post := postDao.GetPostById(postIdInt);
 		writeJsonResponse(createHateoasObject(post, r.Host), w)
     }
 }
